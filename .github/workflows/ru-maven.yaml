@@ -1,0 +1,76 @@
+name: reusable maven build
+on:
+  workflow_call:
+
+
+env:
+  JOBLEVELSECRET: "some other value"
+  JFROG_CLIENT_NAME: "jfrog"
+  JFROG_SECRET: ${{ secrets.JFROG_CLIENT_SECRET }}
+
+jobs: 
+  build:
+    name: POM build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: maven build
+      run: mvn clean install
+
+    - name: TODO report unit tests
+      run: echo "TODO run unit tests"
+
+    - name: loop and upload jars to JFROG
+      run: |
+        for file in /*; do
+          if [ -d "$file" ]; then
+            if [ -d "$file/target" ]; then
+              for jar in "$file/target/*.jar"; do
+                if [ -f "$jar" ]; then
+                  echo "Uploading $jar"
+                  #curl -u $JFROG_CLIENT_NAME:$JFROG_SECRET -T $jar "https://artifactory.com/artifactory/libs-release-local/$jar"
+                fi
+
+              done
+            fi
+          fi
+        done
+
+    - name: zip and upload frontend projects to JFROG
+      run: |
+        for file in /*; do
+          if [ -d "$file" ]; then
+            if [ -d "$file/dist" ]; then
+              angular_output="$file/dist"
+              tar -czvf "$build-output.tar.gz" "$angular_output"
+              #curl -u $JFROG_CLIENT_NAME:$JFROG_SECRET -T "$build-output.tar.gz" "https://artifactory.com/artifactory/libs-release-local/$build-output.tar.gz"
+            fi
+          fi
+        done
+
+  static_code_analysis:
+    name: run SonarQube
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: setup SonarQube
+        run: echo "this is a todo"
+
+  security_scanning:
+    name: Run snyk scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: setup snyk
+        run: echo "this is a todo"
