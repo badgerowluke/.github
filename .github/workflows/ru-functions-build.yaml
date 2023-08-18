@@ -43,7 +43,7 @@ jobs:
         creds: ${{ secrets.AZCLI_CREDS }}
 
     - name: build test and publish
-      working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      working-directory: ${{ inputs.WORKING_DIR }}
       run: |
         dotnet nuget add source --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text --name github "${{ secrets.GH_PACKAGES }}"        
         dotnet restore
@@ -55,7 +55,7 @@ jobs:
       uses: azure/webapps-deploy@v2
       with: 
         app-name: 'paddle-finder-webster'
-        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/publish/${{ inputs.PUBLISH_FOLDER_NAME }}'
+        package: '${{ inputs.WORKING_DIR }}/publish/${{ inputs.PUBLISH_FOLDER_NAME }}'
 
     - name: logout
       run: az logout        
