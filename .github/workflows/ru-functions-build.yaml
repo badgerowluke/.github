@@ -1,0 +1,62 @@
+name: reusable azure functions build workflow_call
+
+on:
+  workflow_call:
+    inputs:
+      WORKING_DIR:
+        description: 'the build directory'
+        required: true
+        default: '.'
+        type: string
+      PUBLISH_FOLDER_NAME:
+        description: 'the publish folder name'
+        required: true
+        default: 'bin'
+        type: string
+
+
+jobs:
+  build:
+    defaults:
+      run:
+        shell: bash
+
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: setup dotnet 3.1.x
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'
+
+    - name: setup .NET 6
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '6.0.x'  
+
+    - name: az login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZCLI_CREDS }}
+
+    - name: build test and publish
+      working-directory: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+      run: |
+        dotnet nuget add source --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text --name github "${{ secrets.GH_PACKAGES }}"        
+        dotnet restore
+        dotnet build --no-restore --configuration Release
+        dotnet test --no-build --verbosity normal
+        dotnet publish --no-restore -c Release -o './publish/${{ inputs.PUBLISH_FOLDER_NAME }}'
+
+    - name: deploy to funtionapp
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: 'paddle-finder-webster'
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/publish/${{ inputs.PUBLISH_FOLDER_NAME }}'
+
+    - name: logout
+      run: az logout        
+    
