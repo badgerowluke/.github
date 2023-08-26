@@ -13,6 +13,21 @@ on:
         required: true
         default: 'bin'
         type: string
+      GHUSER:
+        description: 'the github user'
+        required: true
+        default: 'github'
+        type: string
+      GHTOKEN:
+        description: 'the token for the repo'
+        required: true
+        default: ''
+        type: string
+      GHPACKAGES:
+        description: 'package feed url'
+        required: true
+        default: ''
+        type: string
 
 
 jobs:
@@ -45,7 +60,7 @@ jobs:
     - name: build test and publish
       working-directory: ${{ inputs.WORKING_DIR }}
       run: |
-        dotnet nuget add source --username ${{ secrets.GH_USER }} --password ${{ secrets.GH_TOKEN }} --store-password-in-clear-text --name github "${{ secrets.GH_PACKAGES }}"        
+        dotnet nuget add source --username ${{ inputs.GHUSER }} --password ${{ inputs.GHTOKEN }} --store-password-in-clear-text --name github "${{ inputs.GHPACKAGES }}"        
         dotnet restore
         dotnet build --no-restore --configuration Release
         dotnet test --no-build --verbosity normal
