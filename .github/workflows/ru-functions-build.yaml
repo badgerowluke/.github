@@ -3,6 +3,10 @@ name: reusable azure functions build workflow_call
 on:
   workflow_call:
     inputs:
+      AZURE_FUNCTIONAPP_NAME:
+        description: 'the app name'
+        required: true
+        type: string
       WORKING_DIR:
         description: 'the build directory'
         required: true
@@ -64,7 +68,7 @@ jobs:
     - name: deploy to funtionapp
       uses: azure/webapps-deploy@v2
       with: 
-        app-name: 'paddle-finder-webster'
+        app-name: ${{ inputs.AZURE_FUNCTIONAPP_NAME }}
         package: '${{ inputs.WORKING_DIR }}/publish/${{ inputs.PUBLISH_FOLDER_NAME }}'
 
     - name: logout

@@ -1,0 +1,57 @@
+name: reusable azure functions build workflow call for typescript
+
+on:
+  workflow_call:
+    inputs:
+      WORKING_DIR:
+        description: 'the build directory'
+        required: true
+        default: '.'
+        type: string
+      PUBLISH_FOLDER_NAME:
+        description: 'the publish folder name'
+        required: true
+        default: 'bin'
+        type: string
+      GHUSER:
+        description: 'the github user'
+        required: true
+        default: 'github'
+        type: string
+      GHTOKEN:
+        description: 'the token for the repo'
+        required: true
+        default: ''
+        type: string
+jobs:
+  build:
+    defaults:
+      run:
+        shell: bash
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '20.x'
+    - name: 'build user pref functions'
+      run: |
+        npm install && npm run build
+        # this is here for a test of running Dapr and running a cluster in my local data center
+
+
+    - name: az login
+      uses: azure/login@v1
+      with: 
+        creds: ${{ secrets.AZCLI_CREDS }}
+
+    - name: deploy to funtionapp
+      uses: azure/webapps-deploy@v2Kriste
+      with: 
+        app-name: ${{ inputs.AZURE_FUNCTIONAPP_NAME }}
+        package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/dist'          
+
+    - name: logout
+      run: az logout
+    
